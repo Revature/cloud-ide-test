@@ -70,7 +70,10 @@ export class JavaTestAdapter implements TestAdapter {
                 
                 // Find test classes (support both public and package-private classes)
                 // JUnit 5 allows package-private test classes
-                const classMatch = /(?:public\s+)?class\s+(\w+)/.exec(line);
+                // Only match top-level class declarations (line starts with optional modifiers then "class")
+                // This avoids matching comments like "// This class..." or inner classes
+                const trimmedLine = line.trim();
+                const classMatch = /^(?:public\s+|final\s+|abstract\s+)*class\s+(\w+)/.exec(trimmedLine);
                 if (classMatch) {
                     currentClass = classMatch[1];
                 }
