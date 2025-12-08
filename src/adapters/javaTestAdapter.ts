@@ -29,8 +29,21 @@ export class JavaTestAdapter implements TestAdapter {
                 const fullPath = path.join(dir, entry.name);
                 if (entry.isDirectory()) {
                     files.push(...findTestFiles(fullPath));
-                } else if (entry.isFile() && (entry.name.endsWith('Test.java') || entry.name.startsWith('Test'))) {
-                    files.push(fullPath);
+                } else if (entry.isFile() && entry.name.endsWith('.java')) {
+                    // Match common test file naming conventions:
+                    // - *Test.java (e.g., UserTest.java)
+                    // - *Tests.java (e.g., UserTests.java)
+                    // - Test*.java (e.g., TestUser.java)
+                    // - *TestCase.java (e.g., UserTestCase.java)
+                    // - *IT.java (integration tests, e.g., UserIT.java)
+                    const baseName = entry.name.replace('.java', '');
+                    if (baseName.endsWith('Test') || 
+                        baseName.endsWith('Tests') || 
+                        baseName.startsWith('Test') ||
+                        baseName.endsWith('TestCase') ||
+                        baseName.endsWith('IT')) {
+                        files.push(fullPath);
+                    }
                 }
             }
             return files;
@@ -55,20 +68,34 @@ export class JavaTestAdapter implements TestAdapter {
                     packageName = packageMatch[1];
                 }
                 
-                // Find test classes
-                const classMatch = /public\s+class\s+(\w+)/.exec(line);
+                // Find test classes (support both public and package-private classes)
+                // JUnit 5 allows package-private test classes
+                const classMatch = /(?:public\s+)?class\s+(\w+)/.exec(line);
                 if (classMatch) {
                     currentClass = classMatch[1];
                 }
                 
-                // Find test methods (marked with @Test annotation)
-                if (line.includes('@Test')) {
-                    // Look ahead to next non-empty line for method name
-                    for (let j = i + 1; j < lines.length; j++) {
+                // Find test methods - marked with test annotations
+                // Support JUnit 4 (@Test) and JUnit 5 (@Test, @ParameterizedTest, @RepeatedTest, @TestFactory)
+                const testAnnotations = ['@Test', '@ParameterizedTest', '@RepeatedTest', '@TestFactory'];
+                const hasTestAnnotation = testAnnotations.some(ann => line.trim().startsWith(ann));
+                
+                if (hasTestAnnotation) {
+                    // Look ahead for method signature - may have multiple annotations or blank lines
+                    // Search up to 10 lines ahead to find the method
+                    for (let j = i + 1; j < Math.min(i + 10, lines.length); j++) {
                         const nextLine = lines[j].trim();
                         if (nextLine === '') continue; // Skip empty lines
                         
-                        const methodMatch = /public\s+void\s+(\w+)\s*\(/.exec(nextLine);
+                        // Skip other annotations (they start with @)
+                        if (nextLine.startsWith('@')) continue;
+                        
+                        // Match method signatures:
+                        // - "public void methodName(" - JUnit 4 style
+                        // - "void methodName(" - JUnit 5 package-private
+                        // - "public void methodName (" - with space before paren
+                        // - "protected void methodName(" - less common but valid
+                        const methodMatch = /(?:public\s+|protected\s+|private\s+)?void\s+(\w+)\s*\(/.exec(nextLine);
                         if (methodMatch && currentClass) {
                             // Use fully qualified class name to match Maven XML reports
                             const fullClassName = packageName ? `${packageName}.${currentClass}` : currentClass;
@@ -78,7 +105,7 @@ export class JavaTestAdapter implements TestAdapter {
                                 filePath: path.relative(directory, filePath)
                             });
                         }
-                        break; // Only check the next non-empty line
+                        break; // Found a non-annotation, non-empty line - stop looking
                     }
                 }
             }
