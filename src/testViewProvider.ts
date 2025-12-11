@@ -368,9 +368,9 @@ export class TestViewProvider implements vscode.WebviewViewProvider {
         const startTime = Date.now();
         
         try {
-            // Run tests using the appropriate test adapter with 2 minute timeout
+            // Run tests using the appropriate test adapter with 10 minute timeout
             const timeoutPromise = new Promise<never>((_, reject) => {
-                setTimeout(() => reject(new Error('Test execution timed out after 2 minutes')), 120000);
+                setTimeout(() => reject(new Error('Test execution timed out after 10 minutes')), 600000);
             });
             
             const results = await Promise.race([
