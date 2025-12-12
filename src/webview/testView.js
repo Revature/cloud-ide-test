@@ -144,49 +144,69 @@ function renderTests(options = {}) {
         </div>
     `;
     
-    // First pass: count how many times each test name appears
-    const testNameCounts = new Map();
-    testStates.forEach((test) => {
-        testNameCounts.set(test.name, (testNameCounts.get(test.name) || 0) + 1);
+    // Group tests by file
+    const testsByFile = new Map();
+    testStates.forEach((test, testKey) => {
+        if (!testsByFile.has(test.filePath)) {
+            testsByFile.set(test.filePath, []);
+        }
+        testsByFile.get(test.filePath).push({ test, testKey });
     });
     
-    testStates.forEach((test, testKey) => {
-        const stateClass = test.state || 'not-run';
-        let displayState = test.state || 'not run';
-        
-        // Check if status changed from previous run
-        let flashClass = '';
-        const previousTest = previousTestStates.get(testKey);
-        if (previousTest && previousTest.state !== test.state) {
-            // Status changed
-            if ((previousTest.state === 'failed' || previousTest.state === 'not-run') && test.state === 'passed') {
-                flashClass = 'status-improved';
-            } else if ((previousTest.state === 'passed' || previousTest.state === 'not-run') && test.state === 'failed') {
-                flashClass = 'status-regressed';
-            }
-        }
-        
-        // Only show file path if there are duplicate test names
-        const hasDuplicates = testNameCounts.get(test.name) > 1;
-        const displayName = hasDuplicates ? `${test.name} (${test.filePath})` : test.name;
+    // Render each file group
+    testsByFile.forEach((tests, filePath) => {
+        // Calculate file-level stats
+        const fileTotal = tests.length;
+        const filePassed = tests.filter(t => t.test.state === 'passed').length;
+        const fileFailed = tests.filter(t => t.test.state === 'failed' || t.test.state === 'error').length;
         
         html += `
-            <div class="test-item test-${stateClass} ${flashClass}" onclick="handleTestClick('${escapeHtml(testKey).replace(/'/g, "\\'")}')">
-                <div class="test-name">${formatTestName(displayName)}</div>
-                <div class="test-status">${displayState}</div>
-                ${test.duration ? `<div class="test-duration">Duration: ${test.duration}ms</div>` : ''}
-                ${test.message ? `<div class="test-details">
-                    <span class="label">Message</span>
-                    <div class="value">${escapeHtml(test.message)}</div>
-                </div>` : ''}
-                ${test.expected ? `<div class="test-details">
-                    <span class="label">Expected</span>
-                    <div class="value">${escapeHtml(test.expected)}</div>
-                    <span class="label">Actual</span>
-                    <div class="value">${escapeHtml(test.actual || 'N/A')}</div>
-                </div>` : ''}
-            </div>
+            <div class="file-group">
+                <div class="file-header">
+                    <div class="file-path">${escapeHtml(filePath)}</div>
+                    <div class="file-stats">
+                        <span class="file-stat-passed">${filePassed}/${fileTotal}</span>
+                        ${fileFailed > 0 ? `<span class="file-stat-failed">${fileFailed} failed</span>` : ''}
+                    </div>
+                </div>
         `;
+        
+        tests.forEach(({ test, testKey }) => {
+            const stateClass = test.state || 'not-run';
+            let displayState = test.state || 'not run';
+            
+            // Check if status changed from previous run
+            let flashClass = '';
+            const previousTest = previousTestStates.get(testKey);
+            if (previousTest && previousTest.state !== test.state) {
+                // Status changed
+                if ((previousTest.state === 'failed' || previousTest.state === 'not-run') && test.state === 'passed') {
+                    flashClass = 'status-improved';
+                } else if ((previousTest.state === 'passed' || previousTest.state === 'not-run') && test.state === 'failed') {
+                    flashClass = 'status-regressed';
+                }
+            }
+            
+            html += `
+                <div class="test-item test-${stateClass} ${flashClass}" onclick="handleTestClick('${escapeHtml(testKey).replace(/'/g, "\\'")}')">
+                    <div class="test-name">${formatTestName(test.name)}</div>
+                    <div class="test-status">${displayState}</div>
+                    ${test.duration ? `<div class="test-duration">Duration: ${test.duration}ms</div>` : ''}
+                    ${test.message ? `<div class="test-details">
+                        <span class="label">Message</span>
+                        <div class="value">${escapeHtml(test.message)}</div>
+                    </div>` : ''}
+                    ${test.expected ? `<div class="test-details">
+                        <span class="label">Expected</span>
+                        <div class="value">${escapeHtml(test.expected)}</div>
+                        <span class="label">Actual</span>
+                        <div class="value">${escapeHtml(test.actual || 'N/A')}</div>
+                    </div>` : ''}
+                </div>
+            `;
+        });
+        
+        html += `</div>`; // Close file-group
     });
     
     resultsEl.innerHTML = html;
@@ -486,4 +506,3 @@ function handleTestClick(testKey) {
         filePath: testData.filePath || ''
     });
 }
-
