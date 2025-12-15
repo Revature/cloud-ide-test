@@ -154,6 +154,115 @@ button:disabled {
     border-left-color: #808080; /* Default gray */
 }
 
+/* File grouping */
+.file-group {
+    margin-bottom: 16px;
+    border: 1px solid var(--vscode-panel-border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.file-header {
+    background-color: var(--vscode-textCodeBlock-background);
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--vscode-panel-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.file-path {
+    font-size: 10px;
+    font-weight: bold;
+    color: var(--vscode-foreground);
+    word-break: break-all;
+    flex: 1;
+}
+
+.file-stats {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.file-stat-passed {
+    font-size: 9px;
+    color: #73c991;
+    font-weight: bold;
+}
+
+.file-stat-failed {
+    font-size: 9px;
+    color: #d32f2f;
+    font-weight: bold;
+}
+
+/* Test items within file groups */
+.file-group .test-item {
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    border-bottom: 1px solid var(--vscode-panel-border);
+    margin-bottom: 0;
+    padding: 10px 12px;
+    padding-left: 14px;
+    position: relative;
+    background-color: var(--vscode-editor-background);
+}
+
+.file-group .test-item:last-child {
+    border-bottom: none;
+}
+
+.file-group .test-item:hover {
+    background-color: var(--vscode-list-hoverBackground);
+}
+
+/* Add colored indicator bar on the left for test states */
+.file-group .test-item::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+}
+
+.file-group .test-item.test-not-run::before {
+    background-color: #808080;
+}
+
+.file-group .test-item.test-running::before {
+    background-color: #f1c232;
+}
+
+.file-group .test-item.test-passed::before {
+    background-color: #73c991;
+}
+
+.file-group .test-item.test-failed::before {
+    background-color: #d32f2f;
+}
+
+.file-group .test-item.test-error::before {
+    background-color: #a65e2b;
+}
+
+.file-group .test-item.test-skipped::before {
+    background-color: #848484;
+}
+
+.file-group .test-item.test-not-run {
+    cursor: default;
+}
+
+.file-group .test-item.test-not-run:hover {
+    background-color: var(--vscode-editor-background);
+}
+
 /* Test state colors - using !important to ensure they override */
 .test-item.test-not-run {
     border-left-color: #808080 !important; /* Gray */
@@ -319,4 +428,3 @@ button:disabled {
 .test-item.test-not-run:hover {
     background-color: transparent;
 }
-
