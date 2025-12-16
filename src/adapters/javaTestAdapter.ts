@@ -230,7 +230,7 @@ export class JavaTestAdapter implements TestAdapter {
             const time = parseFloat(testcase.$.time || '0');
             const fullName = `${className}.${methodName}`;
 
-            let status: 'passed' | 'failed' | 'skipped' = 'passed';
+            let status: 'passed' | 'failed' | 'skipped' = 'failed';
             let message: string | undefined;
             let expected: string | undefined;
             let actual: string | undefined;
@@ -271,6 +271,10 @@ export class JavaTestAdapter implements TestAdapter {
             // Check for skipped
             else if (testcase.skipped) {
                 status = 'skipped';
+            }
+            // If no failure, error, or skipped tag, test passed
+            else if (!testcase.failure && !testcase.error && !testcase.skipped) {
+                status = 'passed';
             }
 
             tests.push({

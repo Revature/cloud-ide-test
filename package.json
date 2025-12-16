@@ -2,7 +2,7 @@
   "name": "cloud-ide-test",
   "displayName": "Cloud IDE Test",
   "description": "Multi-language testing extension for Java, Angular, and Python with activity tracking",
-  "version": "0.0.6",
+  "version": "0.0.7",
   "publisher": "Revature",
   "author": "Theodore Balashov",
   "license": "MIT",
@@ -53,6 +53,7 @@
     ]
   },
   "scripts": {
+    "build": "npm version patch --no-git-tag-version && npm install && vsce package",
     "vscode:prepublish": "npm run compile",
     "compile": "tsc -p ./ && npm run copy-webview",
     "copy-webview": "node -e \"require('fs').cpSync('src/webview', 'out/webview', {recursive: true})\"",
