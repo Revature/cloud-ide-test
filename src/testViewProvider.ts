@@ -141,7 +141,27 @@ export class TestViewProvider implements vscode.WebviewViewProvider {
                 });
             });
             console.log(`[Test Discovery] Total unique tests in Map: ${this.testStates.size}`);
-            
+
+            // Dump discovered tests to file for debugging
+            const now = new Date();
+            const folderTimestamp = now.toISOString().slice(0, 16).replace(/[:.]/g, '-'); // Up to minute: 2026-01-14T19-43
+            const dumpDir = path.join('/tst', folderTimestamp);
+            if (!fs.existsSync(dumpDir)) {
+                fs.mkdirSync(dumpDir, { recursive: true });
+            }
+            const dumpPath = path.join(dumpDir, 'discovered-tests.json');
+            const dumpData = {
+                timestamp: now.toISOString(),
+                testCount: this.discoveredTests.length,
+                tests: this.discoveredTests.map(t => ({
+                    name: t.name,
+                    filePath: t.filePath,
+                    key: this.getTestKey(t.name, t.filePath)
+                }))
+            };
+            fs.writeFileSync(dumpPath, JSON.stringify(dumpData, null, 2));
+            console.log(`[Test Discovery] Dumped discovered tests to: ${dumpPath}`);
+
             // Make test files read-only
             await this.makeTestFilesReadOnly(this.discoveredTests.map(t => t.filePath));
         } catch (error) {

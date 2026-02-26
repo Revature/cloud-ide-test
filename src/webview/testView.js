@@ -296,18 +296,9 @@ function renderResults(results, workspaceType) {
             state.errorType = test.errorType;
             testStates.set(matchedKey, state);
         } else {
-            // Add it anyway with a generated key (shouldn't happen but fallback)
-            const testKey = getTestKey(test.name, test.filePath || 'unknown');
-            testStates.set(testKey, {
-                name: test.name,
-                state: test.status,
-                filePath: test.filePath || 'unknown',
-                duration: test.duration,
-                message: test.message,
-                expected: test.expected,
-                actual: test.actual,
-                errorType: test.errorType
-            });
+            // No match found - log warning but do NOT add as new test
+            // This prevents test count from doubling when names don't match exactly
+            console.warn(`[Webview] No match found for test result: ${test.name}. Test will not be displayed.`);
         }
     });
     

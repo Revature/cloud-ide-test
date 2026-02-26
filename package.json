@@ -2,9 +2,9 @@
   "name": "cloud-ide-test",
   "displayName": "Cloud IDE Test",
   "description": "Multi-language testing extension for Java, Angular, and Python with activity tracking",
-  "version": "0.0.7",
+  "version": "0.0.11",
   "publisher": "Revature",
-  "author": "Theodore Balashov",
+  "author": "Theodore Balashov, Kyle Plummer",
   "license": "MIT",
   "icon": "icon.png",
   "repository": {

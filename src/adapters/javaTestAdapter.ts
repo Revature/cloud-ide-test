@@ -61,7 +61,8 @@ export class JavaTestAdapter implements TestAdapter {
                 }
                 
                 // Find test classes (only capture the first/top-level class)
-                if (!currentClass) {
+                // Skip comment lines to avoid matching "class" in Javadoc (e.g., "This class tests...")
+                if (!currentClass && !line.trim().startsWith('*') && !line.trim().startsWith('//') && !line.trim().startsWith('/*')) {
                     const classMatch = /\b(?:(?:public|private|protected|static|final|abstract)\s+)*class\s+(\w+)/i.exec(line);
                     if (classMatch) {
                         currentClass = classMatch[1];
